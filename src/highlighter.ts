@@ -1,12 +1,13 @@
 import { Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate } from "@codemirror/view";
-import type { MyPluginSettings } from './settings';
+import type { TodoHighlighterSettings } from './settings';
+
 
 // Helper function to safely escape regex characters (e.g., escaping the ':' in 'TODO:')
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function buildTodoHighlighter(settings: MyPluginSettings) {
+export function buildTodoHighlighter(settings: TodoHighlighterSettings) {
     // 1. Get all valid keywords from settings and ignore empty names
     const keywords = Object.values(settings.keywords).filter(kw => kw.name.trim() !== "");
 
@@ -37,7 +38,9 @@ export function buildTodoHighlighter(settings: MyPluginSettings) {
                 return Decoration.mark({
                     class: "cm-todo-highlight",
                     attributes: {
-                        style: `color: ${kwSetting.foreground_color}; background-color: ${kwSetting.background_color};`
+						style: `color: ${kwSetting.foreground_color};
+						background-color: ${kwSetting.background_color};
+                        border-radius: ${kwSetting.border_radius}; padding: 0px 5px`
                     }
                 });
             }
@@ -64,34 +67,3 @@ export function buildTodoHighlighter(settings: MyPluginSettings) {
         decorations: v => v.decorations
     });
 }
-
-
-
-
-// import { Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate } from "@codemirror/view";
-// import type { MyPluginSettings } from './settings';
-
-// const todoDecoration = Decoration.mark({
-//     class: "cm-todo-highlight"
-// });
-
-// const todoMatcher = new MatchDecorator({
-//     regexp:/TODO:/g,
-//     decoration: m => todoDecoration
-// })
-
-// export const todoHighlighter = ViewPlugin.fromClass(class {
-//     decorations: DecorationSet;
-
-//     constructor(view: EditorView) {
-//         this.decorations = todoMatcher.createDeco(view);
-//     }
-
-//     update(update: ViewUpdate) {
-//         if (update.docChanged || update.viewportChanged) {
-//             this.decorations = todoMatcher.updateDeco(update, this.decorations);
-//         }
-//     }
-// }, {
-//     decorations: v => v.decorations
-// });

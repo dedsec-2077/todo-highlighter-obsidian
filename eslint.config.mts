@@ -5,6 +5,7 @@ import { globalIgnores } from "eslint/config";
 
 export default tseslint.config(
 	{
+		files: ["**/*.ts", "**/*.mts"],
 		languageOptions: {
 			globals: {
 				...globals.browser,
@@ -21,6 +22,7 @@ export default tseslint.config(
 			},
 		},
 	},
+	// @ts-ignore: The types mark configs as optional, but we know it exists
 	...obsidianmd.configs.recommended,
 	globalIgnores([
 		"node_modules",
@@ -30,5 +32,5 @@ export default tseslint.config(
 		"version-bump.mjs",
 		"versions.json",
 		"main.js",
-	]),
+	])
 );
