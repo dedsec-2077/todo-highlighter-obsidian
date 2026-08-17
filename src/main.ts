@@ -8,12 +8,14 @@ import { Compartment } from "@codemirror/state";
 export default class HelloWorldPlugin extends Plugin {
 	settings: MyPluginSettings;
 
+	private highlighterCompartment = new Compartment();
+
 	async onload() {
 		await this.loadSettings();
 
 		// Here we load the todoHighlighter
 		console.debug('Also loading TODO Highlighter...');
-		this.registerEditorExtension(buildTodoHighlighter(this.settings));
+		this.registerEditorExtension(this.highlighterCompartment.of(buildTodoHighlighter(this.settings)));
 		console.debug(DEFAULT_SETTINGS);
 		console.debug("-------------------------------------------------");
 
@@ -89,6 +91,22 @@ export default class HelloWorldPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		this.updateHighlighter();
+	}
+
+	updateHighlighter() {
+		const newExtension = buildTodoHighlighter(this.settings);
+
+		this.app.workspace.getLeavesOfType("markdown").forEach(leaf => {
+			const view = leaf.view as MarkdownView;
+
+			const cm = (view.editor as any).cm;
+			if (cm) {
+				cm.dispatch({
+					effects: this.highlighterCompartment.reconfigure(newExtension)
+				})
+			}
+		})
 	}
 }
 

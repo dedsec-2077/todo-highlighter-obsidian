@@ -59,7 +59,7 @@ export class SampleSettingTab extends PluginSettingTab {
 
 		var buffer: string = '';
 		new Setting(containerEl)
-			.setName('Highlighted Keywords')
+			.setName('Highlighted keywords')
 			.setDesc('All the keywords that you want to be highlighted')
 			.addText(text => {
 				textComponent = text;
@@ -99,7 +99,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		let dropdown: any;
 		let selected_keyword: any = Object.keys(this.plugin.settings.keywords)[0] || "";  // take the first value
 		new Setting(containerEl)
-			.setName('Selected Keywords')
+			.setName('Selected keywords')
 			.setDesc('These are the keywords you have selected')
 			.setClass('todo-keyword-setting')
 			.addDropdown(dd => {
@@ -110,7 +110,7 @@ export class SampleSettingTab extends PluginSettingTab {
 				})
 			})
 			.addButton(btn => btn
-				.setButtonText('Edit Keyword')
+				.setButtonText('Edit keyword')
 				.onClick(async () => {
 					new KeywordModal(this.app, selected_keyword, this).open();
 				})
@@ -141,11 +141,11 @@ class KeywordModal extends Modal {
 		let foreground_color: string = currentSettings['foreground_color'];
 		let background_color: string = currentSettings['background_color'];
 
-		contentEl.createEl("h2", {text: `Keyword Settings`});
+		contentEl.createEl("h2", {text: `Keyword settings`});
 
 		// ========== Color Pickers ==========
 		new Setting(contentEl)
-			.setName('Foreground Color')
+			.setName('Foreground color')
 			.addColorPicker(cp => cp
 				.setValue(foreground_color)
 				.onChange((value) => {
@@ -155,7 +155,7 @@ class KeywordModal extends Modal {
 			);
 
 		new Setting(contentEl)
-			.setName('Background Color')
+			.setName('Background color')
 			.addColorPicker(cp => cp
 				.setValue(background_color)
 				.onChange((value) => {
@@ -170,14 +170,14 @@ class KeywordModal extends Modal {
 
 		// Current Preview
 		const oldPreviewContainer = bigDiv.createDiv({ cls: 'preview-container' });
-		oldPreviewContainer.createEl('p', { text: 'Current Preview', cls: 'preview-label' });
+		oldPreviewContainer.createEl('p', { text: 'Current preview', cls: 'preview-label' });
 		const oldPreviewInner = oldPreviewContainer.createDiv({ cls : 'preview-inner-container' });
 		const oldPreviewSpan = oldPreviewInner.createEl('span', { text: currentSettings.name, cls: 'preview-span',
 			attr: {style: `color: ${foreground_color}; background: ${background_color};`}});
 
 		// New Preview
 		const newPreviewContainer = bigDiv.createDiv({ cls: 'preview-container' });
-		newPreviewContainer.createEl('p', { text: 'New Preview', cls: 'preview-label' });
+		newPreviewContainer.createEl('p', { text: 'New preview', cls: 'preview-label' });
 		const newPreviewInner = newPreviewContainer.createDiv({	cls: 'preview-inner-container' });
 		const newPreviewSpan = newPreviewInner.createEl('span', { text: currentSettings.name, cls: 'preview-span',
 			attr: {style: `color: ${foreground_color}; background: ${background_color};`}});
@@ -188,7 +188,7 @@ class KeywordModal extends Modal {
 		// ========== Buttons ==========
 		new Setting(contentEl)
 			.addButton(btn => btn
-				.setButtonText('Delete Keyword')
+				.setButtonText('Delete keyword')
 				.setWarning()
 				.onClick(async () => {
 					delete this.settings.plugin.settings.keywords[clean];
@@ -200,7 +200,7 @@ class KeywordModal extends Modal {
 			)
 			.addButton(btn => btn
 				.setCta()
-				.setButtonText('Save Changes')
+				.setButtonText('Save changes')
 				.onClick(async () => {
 					// Here write the changes in the css class
 					currentSettings['foreground_color'] = foreground_color;
