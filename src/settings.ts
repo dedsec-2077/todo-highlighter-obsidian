@@ -6,6 +6,7 @@ interface HighlightSettings {
 	name: string;
 	border_radius: string;
 	foreground_color: string;
+	background: boolean;
 	background_color: string;
 }
 
@@ -78,17 +79,18 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 						// default colors
 						this.plugin.settings.keywords[clean] = {
 							name: buffer,
+							background: false,
 							border_radius: '0px',
 							foreground_color: '#00ff00',
 							background_color: '#000000'
 						};
 						await this.plugin.saveSettings();
 						// MAYBE: this.display(); reload display
+						new Notice(`[SUCCESS]: Inserted new keyword "${buffer}"`);
 					} else {
 						new Notice(`[ERROR]: Could not add ${buffer} conflict with ${this.plugin.settings.keywords[clean].name}`)
 					}
 
-					new Notice(`[SUCCESS]: Inserted new keyword "${buffer}"`);
 					buffer = '';
 					textComponent.setValue('');
 				})
@@ -136,11 +138,20 @@ class KeywordModal extends Modal {
 
 		if (!currentSettings) return;
 
+		let background: boolean = currentSettings['background'];
+		let border_radius: string = currentSettings['border_radius'];
 		let foreground_color: string = currentSettings['foreground_color'];
 		let background_color: string = currentSettings['background_color'];
-		let border_radius: string = currentSettings['border_radius'];
 
 		contentEl.createEl("h2", {text: `Keyword settings`});
+
+		const updateNewPreview = () => {
+			newPreviewSpan.setCssProps({
+				"color": foreground_color,
+				"border-radius": border_radius,
+				"background": background ? background_color : 'transparent'
+			})
+		};
 
 		// ========== Color Pickers ==========
 		new Setting(contentEl)
@@ -148,18 +159,25 @@ class KeywordModal extends Modal {
 			.addColorPicker(cp => cp
 				.setValue(foreground_color)
 				.onChange((value) => {
-					foreground_color = value
-					newPreviewSpan.style.color = value;
+					foreground_color = value;
+					updateNewPreview();
 				})
 			);
 
 		new Setting(contentEl)
 			.setName('Background color')
+			.addToggle(cp => cp
+				.setValue(background)
+				.onChange((value) => {
+					background = value;
+					updateNewPreview();
+				})
+			)
 			.addColorPicker(cp => cp
 				.setValue(background_color)
 				.onChange((value) => {
 					background_color = value;
-					newPreviewSpan.style.background = value;
+					updateNewPreview();
 				})
 			);
 
@@ -169,7 +187,7 @@ class KeywordModal extends Modal {
 				.setValue(border_radius)
 				.onChange((value) => {
 					border_radius = value;
-					newPreviewSpan.style.borderRadius = value;
+					updateNewPreview();
 				})
 			);
 
@@ -178,21 +196,22 @@ class KeywordModal extends Modal {
 		const bigDiv = contentEl.createDiv({ attr: { style: 'display:grid; grid-template-columns:1fr 1fr;'} });
 
 		// Current Preview
+		const oldPreviewBackground = (background) ? `; background: ${background_color}` : '';
 		const oldPreviewContainer = bigDiv.createDiv({ cls: 'preview-container' });
 		oldPreviewContainer.createEl('p', { text: 'Current preview', cls: 'preview-label' });
 		const oldPreviewInner = oldPreviewContainer.createDiv({ cls : 'preview-inner-container' });
 		oldPreviewInner.createEl('span', { text: currentSettings.name, cls: 'preview-span',
-			attr: { style: `color: ${foreground_color}; background: ${ background_color }; border-radius: ${border_radius}`}});
+			attr: { style: `color: ${foreground_color}; border-radius: ${border_radius}; padding: 0px 5px ${oldPreviewBackground}`}});
 
 		// New Preview
+		const newPreviewBackground = (background) ? `; background: ${background_color}` : '';
 		const newPreviewContainer = bigDiv.createDiv({ cls: 'preview-container' });
 		newPreviewContainer.createEl('p', { text: 'New preview', cls: 'preview-label' });
 		const newPreviewInner = newPreviewContainer.createDiv({	cls: 'preview-inner-container' });
-		const newPreviewSpan = newPreviewInner.createEl('span', { text: currentSettings.name, cls: 'preview-span',
-			attr: {style: `color: ${ foreground_color }; background: ${ background_color }; border-radius: ${border_radius}`}});
+		const newPreviewSpan = newPreviewInner.createEl('span', {
+			text: currentSettings.name, cls: 'preview-span',
+			attr: { style: `color: ${foreground_color}; border-radius: ${border_radius}; padding: 0px 5px ${newPreviewBackground}`}});
 
-
-		// CHECK at the end to see a better way to fix this part of the code (spoiler alert: CSS classes)
 
 		// ========== Buttons ==========
 		new Setting(contentEl)
@@ -216,9 +235,13 @@ class KeywordModal extends Modal {
 					currentSettings['foreground_color'] = foreground_color;
 					currentSettings['background_color'] = background_color;
 					currentSettings['border_radius'] = border_radius;
+					currentSettings['background'] = background;
 					await this.settings.plugin.saveSettings();
 
 					new Notice(`[SUCCESS]: Changed values for "${currentSettings['name']}"`)
+					// update the Modal window after saving changes
+					this.contentEl.empty();
+					this.onOpen();
 				})
 			);
 	}
@@ -232,43 +255,3 @@ class KeywordModal extends Modal {
 // add border radius maybe? also the ability to have it color the whole line? not just the specific word?
 // also have a preview inside the popup pane (to see how the colors you have chosen look like) (maybe before Save)? (have a side-by-side comparison)
 // CHECK: for problem. if you have no keywords and add just 1, and then click Edit Keyword it does not work okay : (
-
-/*  style.css
-.keyword-preview-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 20px 0;
-}
-
-.keyword-preview-box {
-    height: 120px;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.keyword-preview-label {
-    margin: 5px;
-    font-size: 0.7em;
-    text-align: center;
-    color: var(--text-muted);
-}
-
-.keyword-preview-inner {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // We will set these variables in TS
-    background-color: var(--kw-bg);
-    color: var(--kw-fg);
-}
-
-.keyword-preview-inner span {
-    font-weight: bold;
-    font-size: 1.2em;
-}
-*/

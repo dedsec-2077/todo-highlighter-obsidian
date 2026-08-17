@@ -34,13 +34,18 @@ export function buildTodoHighlighter(settings: TodoHighlighterSettings) {
             const kwSetting = keywords.find(kw => kw.name === matchedText);
 
             if (kwSetting) {
-                // Return a decoration mark with inline CSS applying the user's chosen colors
-                return Decoration.mark({
+				let styles = `
+					color: ${kwSetting.foreground_color};
+					border-radius: ${kwSetting.border_radius};
+					padding: 0px 5px`;
+
+				if (kwSetting.background)
+					styles += `; background-color: ${kwSetting.background_color}`
+
+				return Decoration.mark({
                     class: "cm-todo-highlight",
                     attributes: {
-						style: `color: ${kwSetting.foreground_color};
-						background-color: ${kwSetting.background_color};
-                        border-radius: ${kwSetting.border_radius}; padding: 0px 5px`
+						style: `${styles}`
                     }
                 });
             }
