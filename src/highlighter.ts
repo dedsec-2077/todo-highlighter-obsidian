@@ -1,26 +1,97 @@
-import {Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate} from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import type { MyPluginSettings } from './settings';
 
-const todoDecoration = Decoration.mark({
-    class: "cm-todo-highlight"
-});
+// Helper function to safely escape regex characters (e.g., escaping the ':' in 'TODO:')
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-const todoMatcher = new MatchDecorator({
-    regexp:/TODO:/g,
-    decoration: m => todoDecoration
-})
+export function buildTodoHighlighter(settings: MyPluginSettings) {
+    // 1. Get all valid keywords from settings and ignore empty names
+    const keywords = Object.values(settings.keywords).filter(kw => kw.name.trim() !== "");
 
-export const todoHighlighter = ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
-
-    constructor(view: EditorView) {
-        this.decorations = todoMatcher.createDeco(view);
+    // 2. If the user hasn't added any keywords yet, return a blank ViewPlugin to prevent errors
+    if (keywords.length === 0) {
+        return ViewPlugin.fromClass(class {
+            decorations: DecorationSet = Decoration.none;
+            constructor() {}
+            update() {}
+        }, { decorations: v => v.decorations });
     }
 
-    update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged) {
-            this.decorations = todoMatcher.updateDeco(update, this.decorations);
+    // 3. Build a dynamic regex string that matches ANY of the keyword names
+    const regexStr = keywords.map(kw => escapeRegex(kw.name)).join("|");
+    const dynamicRegex = new RegExp(`(${regexStr})`, "g");
+
+    // 4. Create the MatchDecorator using the dynamic regex
+    const todoMatcher = new MatchDecorator({
+        regexp: dynamicRegex,
+        decoration: (match) => {
+            const matchedText = match[0];
+
+            // Find the specific settings object for the matched keyword
+            const kwSetting = keywords.find(kw => kw.name === matchedText);
+
+            if (kwSetting) {
+                // Return a decoration mark with inline CSS applying the user's chosen colors
+                return Decoration.mark({
+                    class: "cm-todo-highlight",
+                    attributes: {
+                        style: `color: ${kwSetting.foreground_color}; background-color: ${kwSetting.background_color};`
+                    }
+                });
+            }
+
+            // Fallback just in case
+            return Decoration.mark({ class: "cm-todo-highlight" });
         }
-    }
-}, {
-    decorations: v => v.decorations
-});
+    });
+
+    // 5. Return the configured ViewPlugin
+    return ViewPlugin.fromClass(class {
+        decorations: DecorationSet;
+
+        constructor(view: EditorView) {
+            this.decorations = todoMatcher.createDeco(view);
+        }
+
+        update(update: ViewUpdate) {
+            if (update.docChanged || update.viewportChanged) {
+                this.decorations = todoMatcher.updateDeco(update, this.decorations);
+            }
+        }
+    }, {
+        decorations: v => v.decorations
+    });
+}
+
+
+
+
+// import { Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate } from "@codemirror/view";
+// import type { MyPluginSettings } from './settings';
+
+// const todoDecoration = Decoration.mark({
+//     class: "cm-todo-highlight"
+// });
+
+// const todoMatcher = new MatchDecorator({
+//     regexp:/TODO:/g,
+//     decoration: m => todoDecoration
+// })
+
+// export const todoHighlighter = ViewPlugin.fromClass(class {
+//     decorations: DecorationSet;
+
+//     constructor(view: EditorView) {
+//         this.decorations = todoMatcher.createDeco(view);
+//     }
+
+//     update(update: ViewUpdate) {
+//         if (update.docChanged || update.viewportChanged) {
+//             this.decorations = todoMatcher.updateDeco(update, this.decorations);
+//         }
+//     }
+// }, {
+//     decorations: v => v.decorations
+// });

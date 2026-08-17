@@ -1,7 +1,8 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, SampleSettingTab } from "./settings";
 import type { MyPluginSettings } from './settings';
-import { todoHighlighter } from 'highlighter';
+import { buildTodoHighlighter } from 'highlighter';
+import { Compartment } from "@codemirror/state";
 
 // Remember to rename these classes and interfaces!
 export default class HelloWorldPlugin extends Plugin {
@@ -11,19 +12,21 @@ export default class HelloWorldPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Here we load the todoHighlighter
-		console.log('Also loading TODO Highlighter...');
-		this.registerEditorExtension(todoHighlighter);
+		console.debug('Also loading TODO Highlighter...');
+		this.registerEditorExtension(buildTodoHighlighter(this.settings));
+		console.debug(DEFAULT_SETTINGS);
+		console.debug("-------------------------------------------------");
 
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Greet', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
 			new Notice('[TEST]: Dedsec clicked')
 		});
-		
+
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status bar text');
-		
+
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: 'open-modal-simple',
@@ -71,13 +74,13 @@ export default class HelloWorldPlugin extends Plugin {
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		this.registerInterval(window.setInterval(() => console.debug('setInterval'), 5 * 60 * 1000));
 
-		console.log("[DEDSEC]: This is load...")
+		console.debug("[DEDSEC]: This is load...")
 	}
-	
+
 	onunload() {
-		console.log("[DEDSEC]: This is unload...")
+		console.debug("[DEDSEC]: This is unload...")
 	}
 
 	async loadSettings() {

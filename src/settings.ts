@@ -1,4 +1,5 @@
-import {App, Modal, PluginSettingTab, Setting, Notice, Plugin, setTooltip} from "obsidian";
+// import {App, Modal, PluginSettingTab, Setting, Notice, Plugin, setTooltip, TextComponent} from "obsidian";
+import { App, Modal, PluginSettingTab, Setting, Notice, TextComponent } from "obsidian";
 import MyPlugin from "./main";
 
 
@@ -30,7 +31,7 @@ function getClassName(keyword: string): string {
 
 function getOptions(keywords: Record<string, HighlightSettings>): Record<string, string> {
     const options: Record<string, string> = {};
-    
+
     Object.keys(keywords).forEach(key => {
         if (key.trim() !== "" && keywords[key]) {
             options[key] = keywords[key].name;
@@ -52,17 +53,20 @@ export class SampleSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
+		let textComponent: TextComponent;
 
 		containerEl.empty();
-		
+
 		var buffer: string = '';
 		new Setting(containerEl)
 			.setName('Highlighted Keywords')
 			.setDesc('All the keywords that you want to be highlighted')
-			.addText(text => text
-				.setPlaceholder('Insert keyword')
-				.onChange(value => buffer = value)
-			)
+			.addText(text => {
+				textComponent = text;
+				return text
+					.setPlaceholder('Insert keyword')
+					.onChange(value => buffer = value);
+			})
 			.addButton(btn => btn
 				.setCta()
 				.setButtonText('Save')
@@ -85,11 +89,13 @@ export class SampleSettingTab extends PluginSettingTab {
 					} else {
 						new Notice(`[ERROR]: Could not add ${buffer} conflict with ${this.plugin.settings.keywords[clean]}`)
 					}
-					
-					buffer = ''; // empty the buffer
+
+					new Notice(`[SUCCESS]: Inserted new keyword "${buffer}"`);
+					buffer = '';
+					textComponent.setValue('');
 				})
 			);
-	
+
 		let dropdown: any;
 		let selected_keyword: any = Object.keys(this.plugin.settings.keywords)[0] || "";  // take the first value
 		new Setting(containerEl)
@@ -129,12 +135,12 @@ class KeywordModal extends Modal {
 		let {contentEl} = this;
 		let clean = getClassName(this.keyword);
 		const currentSettings = this.settings.plugin.settings.keywords[clean];
-		
+
 		if (!currentSettings) return;
-		
+
 		let foreground_color: string = currentSettings['foreground_color'];
 		let background_color: string = currentSettings['background_color'];
-		
+
 		contentEl.createEl("h2", {text: `Keyword Settings`});
 
 		// ========== Color Pickers ==========
@@ -198,7 +204,7 @@ class KeywordModal extends Modal {
 				.onClick(async () => {
 					// Here write the changes in the css class
 					currentSettings['foreground_color'] = foreground_color;
-					currentSettings['background_color'] = background_color;	
+					currentSettings['background_color'] = background_color;
 					await this.settings.plugin.saveSettings();
 
 					new Notice(`[SUCCESS]: Changed values for "${currentSettings['name']}"`)
