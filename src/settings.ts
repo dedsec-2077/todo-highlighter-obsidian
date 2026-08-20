@@ -75,8 +75,6 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 					const clean = getClassName(buffer);
 
 					if (!this.plugin.settings.keywords[clean]) {
-						dropdown.addOption(buffer, buffer);
-						// default colors
 						this.plugin.settings.keywords[clean] = {
 							name: buffer,
 							background: false,
@@ -85,7 +83,9 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 							background_color: '#000000'
 						};
 						await this.plugin.saveSettings();
-						// MAYBE: this.display(); reload display
+
+						this.display();
+
 						new Notice(`[SUCCESS]: Inserted new keyword "${buffer}"`);
 					} else {
 						new Notice(`[ERROR]: Could not add ${buffer} conflict with ${this.plugin.settings.keywords[clean].name}`)
@@ -105,17 +105,18 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 			.addDropdown(dd => {
 				dropdown = dd;
 				dd.addOptions(getOptions(this.plugin.settings.keywords))
+				dd.setDisabled(!selected_keyword);
 				dd.onChange((value) => {
 					selected_keyword = value;
 				})
 			})
 			.addButton(btn => btn
 				.setButtonText('Edit keyword')
+				.setDisabled(!selected_keyword)
 				.onClick(async () => {
 					new KeywordModal(this.app, selected_keyword, this).open();
 				})
 			);
-
 	}
 }
 
@@ -252,6 +253,4 @@ class KeywordModal extends Modal {
 	}
 }
 
-// add border radius maybe? also the ability to have it color the whole line? not just the specific word?
-// also have a preview inside the popup pane (to see how the colors you have chosen look like) (maybe before Save)? (have a side-by-side comparison)
-// CHECK: for problem. if you have no keywords and add just 1, and then click Edit Keyword it does not work okay : (
+// TODO: add the ability to have it color the whole line? not just the specific word?

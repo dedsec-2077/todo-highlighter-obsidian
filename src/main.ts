@@ -19,9 +19,6 @@ export default class TodoHighlighterPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new TodoHighlighterSettingTab(this.app, this));
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.debug('setInterval'), 5 * 60 * 1000));
-
 		console.debug("[TODO-Highlighter]: Plugin loaded...")
 	}
 
