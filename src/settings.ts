@@ -1,4 +1,4 @@
-import { App, Modal, PluginSettingTab, Setting, Notice, TextComponent, DropdownComponent } from "obsidian";
+import { App, Modal, PluginSettingTab, Setting, Notice, TextComponent } from "obsidian";
 import MyPlugin from "./main";
 
 
@@ -96,20 +96,16 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 				})
 			);
 
-		let dropdown: DropdownComponent;
 		let selected_keyword: string = Object.keys(this.plugin.settings.keywords)[0] || "";  // take the first value
 		new Setting(containerEl)
 			.setName('Selected keywords')
 			.setDesc('These are the keywords you have selected')
 			.setClass('todo-keyword-setting')
-			.addDropdown(dd => {
-				dropdown = dd;
-				dd.addOptions(getOptions(this.plugin.settings.keywords))
-				dd.setDisabled(!selected_keyword);
-				dd.onChange((value) => {
-					selected_keyword = value;
-				})
-			})
+			.addDropdown(dd => dd
+				.addOptions(getOptions(this.plugin.settings.keywords))
+				.setDisabled(!selected_keyword)
+				.onChange((value) => { selected_keyword = value; })
+			)
 			.addButton(btn => btn
 				.setButtonText('Edit keyword')
 				.setDisabled(!selected_keyword)
@@ -117,6 +113,71 @@ export class TodoHighlighterSettingTab extends PluginSettingTab {
 					new KeywordModal(this.app, selected_keyword, this).open();
 				})
 			);
+	}
+
+	getSettingDefinitions() {
+		console.warn("WARN: getSettingDefintions is called")
+		let buffer: string = '';
+		let selected_keyword: string = Object.keys(this.plugin.settings.keywords)[0] || "";
+
+		return [
+			{
+				name: 'Highlighted keywords',
+				desc: 'All the keywords that you want to be highlighted',
+				render: (setting: Setting) => {
+					setting.addText(text => text
+						.setPlaceholder('Insert keyword')
+						.onChange(value => buffer = value)
+					)
+					.addButton(btn => btn
+						.setCta()
+						.setButtonText('Save')
+						.onClick(async () => {
+							buffer = buffer.trim().replaceAll(" ", "_");
+							const clean = getClassName(buffer);
+
+							if (!this.plugin.settings.keywords[clean]) {
+								this.plugin.settings.keywords[clean] = {
+									name: buffer,
+									background: false,
+									border_radius: '0px',
+									foreground_color: '#00ff00',
+									background_color: '#000000'
+								};
+								await this.plugin.saveSettings();
+
+								this.update();
+
+								new Notice(`[SUCCESS]: Inserted new keyword "${buffer}"`);
+							} else {
+								new Notice(`[ERROR]: Could not add ${buffer} conflict with ${this.plugin.settings.keywords[clean].name}`);
+							}
+
+							buffer = '';
+						})
+					);
+				}
+			},
+			{
+				name: 'Selected keywords',
+				desc: 'These are the keywords you have selected',
+				render: (setting: Setting) => {
+					setting.setClass('todo-keyword-setting');
+					setting.addDropdown(dd => dd
+						.addOptions(getOptions(this.plugin.settings.keywords))
+						.setDisabled(!selected_keyword)
+						.onChange((value) => { selected_keyword = value; })
+					)
+					.addButton(btn => btn
+						.setButtonText('Edit keyword')
+						.setDisabled(!selected_keyword)
+						.onClick(async () => {
+							new KeywordModal(this.app, selected_keyword, this).open();
+						})
+					);
+				}
+			}
+		];
 	}
 }
 
